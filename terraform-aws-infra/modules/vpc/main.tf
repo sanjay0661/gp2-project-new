@@ -9,6 +9,7 @@ resource "aws_vpc" "main" {
   }
 }
 
+# Public Subnets
 resource "aws_subnet" "public" {
   count = length(var.public_subnet_cidrs)
 
@@ -22,6 +23,7 @@ resource "aws_subnet" "public" {
   }
 }
 
+# Private Subnets
 resource "aws_subnet" "private" {
   count = length(var.private_subnet_cidrs)
 
@@ -34,6 +36,7 @@ resource "aws_subnet" "private" {
   }
 }
 
+# Internet Gateway for Public Subnets
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
@@ -42,6 +45,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
+# Public Route Table
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -50,60 +54,56 @@ resource "aws_route_table" "public" {
   }
 }
 
+# Public Route for Internet Access
 resource "aws_route" "public_internet_access" {
   route_table_id         = aws_route_table.public.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.igw.id
 }
 
+# Associate Public Subnets with Public Route Table
 resource "aws_route_table_association" "public" {
   count          = length(var.public_subnet_cidrs)
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
-# Elastic IPs for each NAT Gateway
+# Allocate Elastic IP for NAT Gateway
 resource "aws_eip" "nat" {
-  count = length(var.public_subnet_cidrs)
-
   tags = {
-    Name = "${var.environment}-nat-eip-${count.index}"
+    Name = "${var.environment}-nat-eip"
   }
 }
 
-# NAT Gateways (one per public subnet)
+# Create a Single NAT Gateway in the First Public Subnet
 resource "aws_nat_gateway" "nat" {
-  count         = length(var.public_subnet_cidrs)
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id  # Attach NAT to the first public subnet
 
   tags = {
-    Name = "${var.environment}-nat-${count.index}"
+    Name = "${var.environment}-nat"
   }
 }
 
-# Private Route Tables (one per AZ)
+# Single Private Route Table (One for All Private Subnets)
 resource "aws_route_table" "private" {
-  count = length(var.private_subnet_cidrs)
-
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.environment}-private-rt-${count.index}"
+    Name = "${var.environment}-private-rt"
   }
 }
 
-# Associate private subnets to their corresponding NAT Gateway
+# Private Route for Internet via NAT Gateway
 resource "aws_route" "private_nat_access" {
-  count = length(var.private_subnet_cidrs)
-
-  route_table_id         = aws_route_table.private[count.index].id
+  route_table_id         = aws_route_table.private.id
   destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.nat[count.index % length(var.public_subnet_cidrs)].id
+  nat_gateway_id         = aws_nat_gateway.nat.id
 }
 
+# Associate All Private Subnets with the Single Private Route Table
 resource "aws_route_table_association" "private" {
   count          = length(var.private_subnet_cidrs)
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
+  route_table_id = aws_route_table.private.id
 }

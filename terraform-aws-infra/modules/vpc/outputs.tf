@@ -14,6 +14,7 @@ output "igw_id" {
   value = aws_internet_gateway.igw.id  # Change "this" to "igw"
 }
 
-output "nat_gateway_id" {
-  value = var.create_nat_gateway ? aws_nat_gateway.nat[0].id : null  # Change "this" to "nat"
+output "nat_gateway_ids" {
+  value = var.create_nat_gateway ? aws_nat_gateway.nat[*].id : []
 }
+
