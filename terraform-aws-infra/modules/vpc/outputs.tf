@@ -18,3 +18,7 @@ output "nat_gateway_ids" {
   value = var.create_nat_gateway ? aws_nat_gateway.nat[*].id : []
 }
 
+
+output "private_subnet_ids" {
+  value = aws_subnet.private[*].id
+}

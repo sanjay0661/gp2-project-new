@@ -1,17 +1,20 @@
-variable "aws_region" {
-  description = "The AWS region where the API Gateway will be deployed"
-  type        = string
-  default     = "us-east-1"
-}
-
 variable "api_name" {
   description = "The name of the API Gateway"
   type        = string
-  default     = "gp2-dev"
 }
 
 variable "stage_name" {
-  description = "The name of the deployment stage"
+  description = "The stage name for the API"
   type        = string
-  default     = "dev"
 }
+
+variable "security_group_id" {
+  description = "Security Group ID for VPC Link"
+  type        = string
+}
+
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs for VPC Link"
+  type        = list(string)
+}
+
