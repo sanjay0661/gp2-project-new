@@ -1,5 +1,5 @@
-variable "api_name" {
-  description = "The name of the API Gateway"
+variable "environment" {
+  description = "The environment name (e.g., dev, staging, prod)"
   type        = string
 }
 

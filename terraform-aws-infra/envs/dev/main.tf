@@ -28,7 +28,7 @@ module "security_group" {
 
 module "api_gateway" {
   source              = "../../modules/api-gateway"
-  api_name            = "develop-gp2"
+  environment         = "develop-gp2"
   stage_name          = "dev"
   security_group_id   = module.security_group.security_group_id
   private_subnet_ids  = module.vpc.private_subnet_ids
