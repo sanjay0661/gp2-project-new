@@ -1,37 +1,35 @@
-resource "aws_ecs_task_definition" "police_task" {
-  family                   = var.family
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["EC2"]
-  cpu                      = var.cpu
-  memory                   = var.memory
-  execution_role_arn       = var.execution_role_arn
-  task_role_arn            = var.task_role_arn
+resource "aws_lb" "ecs_alb" {
+  name               = "${var.environment}-ecs-alb"
+  internal           = true  # Internal ALB for private subnets
+  load_balancer_type = "application"
+  security_groups    = [var.security_group_id]
+  subnets            = var.private_subnet_ids  # Use private subnets
 
-  container_definitions = jsonencode([
-    {
-      name      = var.container_name
-      image     = "${var.ecr_repository_url}:latest"
-      cpu       = var.cpu
-      memory    = var.memory
-      essential = true
+  enable_deletion_protection = false
+}
 
-      portMappings = [
-        {
-          containerPort = var.container_port
-          hostPort      = var.container_port
-        }
-      ]
+resource "aws_lb_target_group" "ecs_tg" {
+  name     = "${var.environment}-ecs-tg"
+  port     = var.container_port
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
 
-      environment = var.environment_variables
+  health_check {
+    path                = "/"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+}
 
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = "/ecs/${var.family}"
-          awslogs-region        = var.aws_region
-          awslogs-stream-prefix = "ecs"
-        }
-      }
-    }
-  ])
+resource "aws_lb_listener" "ecs_listener" {
+  load_balancer_arn = aws_lb.ecs_alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.ecs_tg.arn
+  }
 }

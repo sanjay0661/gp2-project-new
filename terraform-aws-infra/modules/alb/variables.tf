@@ -1,36 +1,24 @@
 variable "environment" {
-  description = "The environment name (e.g., dev, staging, prod)"
+  description = "The deployment environment (e.g., dev, staging, prod)"
   type        = string
 }
 
 variable "vpc_id" {
-  description = "VPC ID where the security group will be created"
+  description = "The ID of the VPC"
   type        = string
 }
 
-variable "ingress_rules" {
-  description = "List of ingress rules"
-  type = list(object({
-    from_port   = number
-    to_port     = number
-    protocol    = string
-    cidr_blocks = list(string)
-    description = optional(string)
-  }))
-  default = []
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  type        = list(string)
 }
 
-variable "egress_rules" {
-  description = "List of egress rules"
-  type = list(object({
-    from_port   = number
-    to_port     = number
-    protocol    = string
-    cidr_blocks = list(string)
-    description = optional(string)
-  }))
-  default = []
+variable "security_group_id" {
+  description = "The security group ID to attach to the ALB"
+  type        = string
 }
 
-
-
+variable "container_port" {
+  description = "The port on which the container is running"
+  type        = number
+}

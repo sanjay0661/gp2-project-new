@@ -84,3 +84,26 @@ module "ecs_task" {
     { name = "SERVICE", value = "police" }
   ]
 }
+
+module "alb" {
+  source            = "../../modules/alb"
+  environment       = "develop-gp2"
+  vpc_id           = module.vpc.vpc_id
+  private_subnet_ids   = module.vpc.private_subnet_ids
+  security_group_id = module.security_group.security_group_id
+  container_port    = 8080
+}
+
+module "ecs_service" {
+  source              = "../../modules/ecs-service"
+  environment         = "develop-gp2"
+  cluster_id          = module.ecs.ecs_cluster_id
+  task_definition_arn = module.ecs_task.task_definition_arn
+  desired_count       = 2
+  private_subnet_ids  = module.vpc.private_subnet_ids
+  security_group_id   = module.security_group.security_group_id
+  target_group_arn     = module.alb.target_group_arn
+  container_name      = "police-container"
+  container_port      = 8080
+}
+
