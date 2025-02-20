@@ -27,9 +27,6 @@ module "security_group" {
   
 }
 
-
-
-
 module "api_gateway" {
   source              = "../../modules/api-gateway"
   environment         = "develop-gp2"
@@ -59,3 +56,13 @@ module "ecs" {
   vpc_id               = module.vpc.vpc_id
  
 }
+
+
+module "ecr" {
+  source            = "../../modules/ecr"
+  repository_name   = "develop-gp2"
+  image_tag_mutability = "MUTABLE"
+  encryption_type   = "AES256"
+  scan_on_push      = true
+}
+
