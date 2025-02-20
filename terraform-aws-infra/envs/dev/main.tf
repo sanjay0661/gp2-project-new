@@ -55,7 +55,7 @@ module "ecs" {
   asg_max_size         = 5
   asg_desired_capacity = 1
   private_subnet_ids   = module.vpc.private_subnet_ids
-  security_group_id    = module.ecs.ecs_security_group_id
+  security_group_id    = module.security_group.security_group_id
   vpc_id               = module.vpc.vpc_id
  
   ecs_ingress_rules = [
