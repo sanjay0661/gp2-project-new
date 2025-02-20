@@ -10,11 +10,11 @@ module "vpc" {
 }
 
 
-module "security_group" {
-  source      = "../../modules/security-groups"
-  environment = "develop-gp2"
-  vpc_id      = module.vpc.vpc_id
 
+module "security_group" {
+  source          = "../../modules/security-groups"
+  environment     = "develop-gp2"
+  vpc_id          = module.vpc.vpc_id
   ingress_rules = [
     { from_port = 22, to_port = 22, protocol = "tcp", cidr_blocks = ["0.0.0.0/0"], description = "Allow SSH" },
     { from_port = 80, to_port = 80, protocol = "tcp", cidr_blocks = ["0.0.0.0/0"], description = "Allow HTTP" },
@@ -24,7 +24,11 @@ module "security_group" {
   egress_rules = [
     { from_port = 0, to_port = 0, protocol = "-1", cidr_blocks = ["0.0.0.0/0"], description = "Allow all outbound traffic" }
   ]
+  
 }
+
+
+
 
 module "api_gateway" {
   source              = "../../modules/api-gateway"
@@ -34,4 +38,33 @@ module "api_gateway" {
   private_subnet_ids  = module.vpc.private_subnet_ids
 }
 
+module "iam" {
+  source              = "../../modules/iam"
+  environment         = "develop-gp2"
+}
 
+module "ecs" {
+  source               = "../../modules/ecs"
+  cluster_name         = "dev-ecs-cluster"
+  ami_id               = "ami-0c55b159cbfafe1f0"  # Update with a valid ECS-optimized AMI
+  instance_type        = "t3.medium"
+  key_name             = "devopsgp2"
+  ebs_volume_size      = 50
+  iam_instance_profile = module.iam.ecs_instance_profile
+  asg_min_size         = 0
+  asg_max_size         = 5
+  asg_desired_capacity = 1
+  private_subnet_ids   = module.vpc.private_subnet_ids
+  security_group_id    = module.ecs.ecs_security_group_id
+  vpc_id               = module.vpc.vpc_id
+ 
+  ecs_ingress_rules = [
+    { from_port = 22, to_port = 22, protocol = "tcp", cidr_blocks = ["0.0.0.0/0"], description = "Allow SSH" },
+    { from_port = 80, to_port = 80, protocol = "tcp", cidr_blocks = ["0.0.0.0/0"], description = "Allow HTTP" },
+    { from_port = 443, to_port = 443, protocol = "tcp", cidr_blocks = ["0.0.0.0/0"], description = "Allow HTTPS" }
+  ]
+
+  ecs_egress_rules = [
+    { from_port = 0, to_port = 0, protocol = "-1", cidr_blocks = ["0.0.0.0/0"], description = "Allow all outbound traffic" }
+  ]
+}

@@ -19,7 +19,7 @@ output "api_gateway_endpoint" {
 }
 
 resource "aws_apigatewayv2_vpc_link" "vpc_link" {
-  name        = "vpc-link-gp2-dev"
+  name        = "${var.environment}-vpc-link"
   security_group_ids = [var.security_group_id]
   subnet_ids  = var.private_subnet_ids
 }

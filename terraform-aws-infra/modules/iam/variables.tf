@@ -1,5 +1,4 @@
-variable "iam_role_name" {
-  description = "IAM Role Name for ECS Instances"
+variable "environment" {
+  description = "The environment name (e.g., dev, staging, prod)"
   type        = string
-  default     = "ecsInstanceRole"
 }
