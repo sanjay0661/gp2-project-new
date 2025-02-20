@@ -66,3 +66,21 @@ module "ecr" {
   scan_on_push      = true
 }
 
+
+module "ecs_task" {
+  source              = "../../modules/ecs-task"
+  family              = "police-task"
+  container_name      = "police-container"
+  ecr_repository_url  = module.ecr.repository_url
+  execution_role_arn  = module.iam.ecs_task_role_arn
+  task_role_arn       = module.iam.ecs_task_role_arn
+  cpu                 = 512
+  memory              = 1024
+  container_port      = 8080
+  aws_region          = "us-east-1"
+
+  environment_variables = [
+    { name = "ENV", value = "development" },
+    { name = "SERVICE", value = "police" }
+  ]
+}
