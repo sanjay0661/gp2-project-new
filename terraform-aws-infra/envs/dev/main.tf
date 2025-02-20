@@ -58,13 +58,4 @@ module "ecs" {
   security_group_id    = module.security_group.security_group_id
   vpc_id               = module.vpc.vpc_id
  
-  ecs_ingress_rules = [
-    { from_port = 22, to_port = 22, protocol = "tcp", cidr_blocks = ["0.0.0.0/0"], description = "Allow SSH" },
-    { from_port = 80, to_port = 80, protocol = "tcp", cidr_blocks = ["0.0.0.0/0"], description = "Allow HTTP" },
-    { from_port = 443, to_port = 443, protocol = "tcp", cidr_blocks = ["0.0.0.0/0"], description = "Allow HTTPS" }
-  ]
-
-  ecs_egress_rules = [
-    { from_port = 0, to_port = 0, protocol = "-1", cidr_blocks = ["0.0.0.0/0"], description = "Allow all outbound traffic" }
-  ]
 }

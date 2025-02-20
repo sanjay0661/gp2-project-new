@@ -20,9 +20,8 @@ resource "aws_launch_template" "ecs_launch_template" {
 
  network_interfaces {
     associate_public_ip_address = false
-    security_groups             = [aws_security_group.ecs_sg.id]
+    security_groups             = [var.security_group_id]  # Use the provided security group
   }
-
 
   iam_instance_profile {
     name = var.iam_instance_profile
