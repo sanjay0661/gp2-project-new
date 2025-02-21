@@ -41,12 +41,18 @@ module "iam" {
   environment         = "develop-gp2"
 }
 
+module "keypair" {
+  source   = "../../modules/keypair"
+  key_name = "develop-gp2"
+}
+
+
 module "ecs" {
   source               = "../../modules/ecs"
   cluster_name         = "develop-gp2-ecs-cluster"
   ami_id               = "ami-0c55b159cbfafe1f0"  # Update with a valid ECS-optimized AMI
   instance_type        = "t3.medium"
-  key_name             = "develop-gp2"
+  key_name             = module.keypair.key_name
   ebs_volume_size      = 50
   iam_instance_profile = module.iam.ecs_instance_profile
   asg_min_size         = 0
@@ -66,6 +72,9 @@ module "ecr" {
   encryption_type   = "AES256"
   scan_on_push      = true
 }
+
+
+
 
 
 module "ecs_task" {
