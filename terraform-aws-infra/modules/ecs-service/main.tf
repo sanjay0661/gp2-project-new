@@ -16,3 +16,4 @@ resource "aws_ecs_service" "police_service" {
     container_port   = var.container_port
   }
 }
+

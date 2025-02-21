@@ -43,10 +43,10 @@ module "iam" {
 
 module "ecs" {
   source               = "../../modules/ecs"
-  cluster_name         = "dev-ecs-cluster"
+  cluster_name         = "develop-gp2-ecs-cluster"
   ami_id               = "ami-0c55b159cbfafe1f0"  # Update with a valid ECS-optimized AMI
   instance_type        = "t3.medium"
-  key_name             = "devopsgp2"
+  key_name             = "develop-gp2"
   ebs_volume_size      = 50
   iam_instance_profile = module.iam.ecs_instance_profile
   asg_min_size         = 0
@@ -70,14 +70,14 @@ module "ecr" {
 
 module "ecs_task" {
   source              = "../../modules/ecs-task"
-  family              = "police-task"
-  container_name      = "police-container"
+  family              = "develop-gp2-police-task"
+  container_name      = "develop-gp2-police-container"
   ecr_repository_url  = module.ecr.repository_url
   execution_role_arn  = module.iam.ecs_task_role_arn
   task_role_arn       = module.iam.ecs_task_role_arn
   cpu                 = 512
   memory              = 1024
-  container_port      = 8080
+  container_port      = 80
   aws_region          = "us-east-1"
 
   environment_variables = [
@@ -92,7 +92,7 @@ module "alb" {
   vpc_id            = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
   security_group_id = module.security_group.security_group_id
-  container_port    = 8080
+  container_port    = 80
 }
 
 module "ecs_service" {
@@ -105,6 +105,6 @@ module "ecs_service" {
   security_group_id   = module.security_group.security_group_id
   target_group_arn     = module.alb.target_group_arn
   container_name      = "police-container"
-  container_port      = 8080
+  container_port      = 80
 }
 
