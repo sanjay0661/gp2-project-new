@@ -33,6 +33,7 @@ module "api_gateway" {
   stage_name          = "dev"
   security_group_id   = module.security_group.security_group_id
   private_subnet_ids  = module.vpc.private_subnet_ids
+  alb_arn             = module.alb.alb_arn 
 }
 
 module "iam" {
@@ -88,8 +89,8 @@ module "ecs_task" {
 module "alb" {
   source            = "../../modules/alb"
   environment       = "develop-gp2"
-  vpc_id           = module.vpc.vpc_id
-  private_subnet_ids   = module.vpc.private_subnet_ids
+  vpc_id            = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
   security_group_id = module.security_group.security_group_id
   container_port    = 8080
 }
