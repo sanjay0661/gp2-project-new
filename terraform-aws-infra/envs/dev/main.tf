@@ -10,7 +10,6 @@ module "vpc" {
 }
 
 
-
 module "security_group" {
   source          = "../../modules/security-groups"
   environment     = "develop-gp2"
@@ -26,6 +25,7 @@ module "security_group" {
   ]
   
 }
+
 
 module "api_gateway" {
   source              = "../../modules/api-gateway"
@@ -73,10 +73,6 @@ module "ecr" {
   scan_on_push      = true
 }
 
-
-
-
-
 module "ecs_task" {
   source              = "../../modules/ecs-task"
   family              = "develop-gp2-police-task"
@@ -104,16 +100,26 @@ module "alb" {
   container_port    = 80
 }
 
-module "ecs_service" {
-  source              = "../../modules/ecs-service"
-  environment         = "develop-gp2"
-  cluster_id          = module.ecs.ecs_cluster_id
-  task_definition_arn = module.ecs_task.task_definition_arn
-  desired_count       = 2
-  private_subnet_ids  = module.vpc.private_subnet_ids
-  security_group_id   = module.security_group.security_group_id
-  target_group_arn     = module.alb.target_group_arn
-  container_name      = "police-container"
-  container_port      = 80
+
+module "cloud_map" {
+  source          = "../../modules/cloud-map"
+  namespace_name  = module.ecs.cluster_name 
+  vpc_id          = module.vpc.vpc_id
 }
+
+
+module "ecs_service" {
+  source                 = "../../modules/ecs-service"
+  environment            = "develop-gp2"
+  cluster_id             = module.ecs.ecs_cluster_id
+  task_definition_arn    = module.ecs_task.task_definition_arn
+  desired_count          = 2
+  private_subnet_ids     = module.vpc.private_subnet_ids
+  security_group_id      = module.security_group.security_group_id
+  target_group_arn       = module.alb.target_group_arn
+  container_name         = "police-container"
+  container_port         = 80
+  service_connect_namespace = module.cloud_map.namespace_id  
+}
+
 

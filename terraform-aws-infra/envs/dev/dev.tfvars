@@ -57,6 +57,7 @@
   encryption_type   = "AES256"
   scan_on_push      = true
 
+
 # ecs_task
 
   family              = "develop-gp2-police-task"
@@ -83,8 +84,16 @@
   security_group_id = module.security_group.security_group_id
   container_port    = 80
 
-#ecs_service
 
+module "cloud_map" {
+  source          = "../../modules/cloud-map"
+  namespace_name  = module.ecs.cluster_name  # Use the ECS cluster name
+  vpc_id          = module.vpc.vpc_id
+}
+
+
+module "ecs_service" {
+  source              = "../../modules/ecs-service"
   environment         = "develop-gp2"
   cluster_id          = module.ecs.ecs_cluster_id
   task_definition_arn = module.ecs_task.task_definition_arn
@@ -94,5 +103,6 @@
   target_group_arn     = module.alb.target_group_arn
   container_name      = "police-container"
   container_port      = 80
+}
 
 

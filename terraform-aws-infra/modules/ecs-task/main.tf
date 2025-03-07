@@ -19,6 +19,9 @@ resource "aws_ecs_task_definition" "police_task" {
         {
           containerPort = var.container_port
           hostPort      = var.container_port
+          protocol      = "tcp"
+          portName      = "service-connect"
+          appProtocol   = "http"
         }
       ]
 

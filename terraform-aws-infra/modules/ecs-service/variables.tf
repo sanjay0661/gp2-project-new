@@ -43,3 +43,8 @@ variable "container_port" {
   description = "Port of the container"
   type        = number
 }
+
+variable "service_connect_namespace" {
+  description = "The Cloud Map namespace for Service Connect"
+  type        = string
+}
