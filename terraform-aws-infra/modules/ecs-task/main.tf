@@ -1,6 +1,6 @@
 resource "aws_ecs_task_definition" "police_task" {
   family                   = var.family
-  network_mode             = "awsvpc"
+  network_mode             = var.network_mode
   requires_compatibilities = ["EC2"]
   cpu                      = var.cpu
   memory                   = var.memory

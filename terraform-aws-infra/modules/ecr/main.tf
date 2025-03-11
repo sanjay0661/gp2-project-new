@@ -1,5 +1,6 @@
-resource "aws_ecr_repository" "ecr_repo" {
-  name                 = var.repository_name
+resource "aws_ecr_repository" "ecr_repos" {
+  for_each             = toset(var.repository_names)
+  name                 = each.value
   image_tag_mutability = var.image_tag_mutability
 
   encryption_configuration {
@@ -11,8 +12,9 @@ resource "aws_ecr_repository" "ecr_repo" {
   }
 }
 
-resource "aws_ecr_lifecycle_policy" "ecr_policy" {
-  repository = aws_ecr_repository.ecr_repo.name
+resource "aws_ecr_lifecycle_policy" "ecr_policies" {
+  for_each   = aws_ecr_repository.ecr_repos
+  repository = each.value.name
 
   policy = <<EOF
 {

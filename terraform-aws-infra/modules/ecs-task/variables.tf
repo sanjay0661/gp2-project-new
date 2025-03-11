@@ -1,3 +1,10 @@
+variable "network_mode" {
+  description = "The ECS network mode (awsvpc or bridge)"
+  type        = string
+  default     = "awsvpc"
+}
+
+
 variable "family" {
   description = "The family name of the ECS task definition"
   type        = string
