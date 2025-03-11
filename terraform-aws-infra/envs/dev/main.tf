@@ -265,7 +265,7 @@ module "ecs_service_configs" {
   security_group_id      = module.security_group.security_group_id
   target_group_arn       = module.alb.target_group_arn
   container_name         = "develop-gp2-configs-container"
-  container_port         = 80
+  container_port         = 5004
   service_connect_namespace = module.cloud_map.namespace_id  
 }
 
@@ -279,7 +279,7 @@ module "ecs_service_documents" {
   security_group_id      = module.security_group.security_group_id
   target_group_arn       = module.alb.target_group_arn
   container_name         = "develop-gp2-documents-container"
-  container_port         = 80
+  container_port         = 5008
   service_connect_namespace = module.cloud_map.namespace_id  
 }
 
@@ -293,7 +293,7 @@ module "ecs_service_gateway" {
   security_group_id      = module.security_group.security_group_id
   target_group_arn       = module.alb.target_group_arn
   container_name         = "develop-gp2-gateway-container"
-  container_port         = 80
+  container_port         = 5000
   service_connect_namespace = module.cloud_map.namespace_id  
 }
 
@@ -307,7 +307,7 @@ module "ecs_service_identity" {
   security_group_id      = module.security_group.security_group_id
   target_group_arn       = module.alb.target_group_arn
   container_name         = "develop-gp2-identity-container"
-  container_port         = 80
+  container_port         =  5002
   service_connect_namespace = module.cloud_map.namespace_id  
 }
 
@@ -321,7 +321,7 @@ module "ecs_service_payment" {
   security_group_id      = module.security_group.security_group_id
   target_group_arn       = module.alb.target_group_arn
   container_name         = "develop-gp2-payment-container"
-  container_port         = 80
+  container_port         = 5003
   service_connect_namespace = module.cloud_map.namespace_id  
 }
 
@@ -335,7 +335,7 @@ module "ecs_service_workspace" {
   security_group_id      = module.security_group.security_group_id
   target_group_arn       = module.alb.target_group_arn
   container_name         = "develop-gp2-workspace-container"
-  container_port         = 80
+  container_port         = 5006
   service_connect_namespace = module.cloud_map.namespace_id  
 }
 
@@ -349,7 +349,7 @@ module "ecs_service_tenant" {
   security_group_id      = module.security_group.security_group_id
   target_group_arn       = module.alb.target_group_arn
   container_name         = "develop-gp2-tenant-container"
-  container_port         = 80
+  container_port         = 3001
   service_connect_namespace = module.cloud_map.namespace_id  
 }
 
@@ -363,7 +363,7 @@ module "ecs_service_webhook" {
   security_group_id      = module.security_group.security_group_id
   target_group_arn       = module.alb.target_group_arn
   container_name         = "develop-gp2-webhook-container"
-  container_port         = 80
+  container_port         = 5007
   service_connect_namespace = module.cloud_map.namespace_id  
 }
 
@@ -377,7 +377,7 @@ module "ecs_service_marketing" {
   security_group_id      = module.security_group.security_group_id
   target_group_arn       = module.alb.target_group_arn
   container_name         = "develop-gp2-marketing-container"
-  container_port         = 80
+  container_port         = 3000 
   service_connect_namespace = module.cloud_map.namespace_id  
 }
 
