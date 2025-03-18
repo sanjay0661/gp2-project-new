@@ -48,3 +48,49 @@ variable "service_connect_namespace" {
   description = "The Cloud Map namespace for Service Connect"
   type        = string
 }
+
+
+#Autoscale
+
+variable "min_task_count" {
+  description = "Minimum number of ECS tasks"
+  type        = number
+  default     = 1
+}
+
+variable "max_task_count" {
+  description = "Maximum number of ECS tasks"
+  type        = number
+  default     = 5
+}
+
+variable "target_cpu_utilization" {
+  description = "Target CPU utilization percentage for auto-scaling"
+  type        = number
+  default     = 50
+}
+
+variable "scale_in_cooldown" {
+  description = "Cooldown period before scaling in (seconds)"
+  type        = number
+  default     = 300
+}
+
+variable "scale_out_cooldown" {
+  description = "Cooldown period before scaling out (seconds)"
+  type        = number
+  default     = 300
+}
+
+variable "health_check_path" {
+  description = "Health check path for the target group"
+  type        = string
+  default     = "/"
+}
+
+variable "path_pattern" {
+  description = "Path pattern for ALB listener rule"
+  type        = string
+  default     = "/*"
+}
+

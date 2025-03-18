@@ -34,3 +34,32 @@ resource "aws_ecs_service" "ecs_service" {
     ignore_changes = [task_definition]
   }
 }
+
+
+# Auto Scaling Target
+resource "aws_appautoscaling_target" "ecs_target" {
+  service_namespace  = "ecs"
+  resource_id        = "service/${var.cluster_id}/${aws_ecs_service.ecs_service.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  min_capacity       = var.min_task_count
+  max_capacity       = var.max_task_count
+}
+
+# Auto Scaling Policy (Target Tracking)
+resource "aws_appautoscaling_policy" "ecs_scaling_policy" {
+  name               = "${var.environment}-ecs-scaling-policy"
+  service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
+  resource_id        = aws_appautoscaling_target.ecs_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
+  policy_type        = "TargetTrackingScaling"
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value       = var.target_cpu_utilization
+    scale_in_cooldown  = var.scale_in_cooldown
+    scale_out_cooldown = var.scale_out_cooldown
+  }
+}
+

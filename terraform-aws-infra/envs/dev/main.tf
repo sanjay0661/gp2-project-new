@@ -67,7 +67,7 @@ module "ecs" {
 
 module "ecr" {
   source            = "../../modules/ecr"
-  repository_names    = ["configs", "documents", "gateway", "identity", "payment", "workspace", "marketing", "tenant", "webhook"]
+  repository_names    = ["configs", "documents", "gateway", "identity", "payment", "workspace", "marketing", "tenant", "webhook", "permitio"]
   image_tag_mutability = "MUTABLE"
   encryption_type   = "AES256"
   scan_on_push      = true
@@ -81,6 +81,14 @@ module "alb" {
   private_subnet_ids = module.vpc.private_subnet_ids
   security_group_id = module.security_group.security_group_id
   container_port    = 80
+  health_check_path  = "/health"
+
+  gateway_target_group_arn         = module.alb.gateway_target_group_arn
+  marketing_target_group_arn       = module.alb.marketing_target_group_arn
+  webhook_target_group_arn         = module.alb.webhook_target_group_arn
+  permitio_target_group_arn        = module.alb.permitio_target_group_arn
+  frontend_tenant_target_group_arn = module.alb.frontend_tenant_target_group_arn
+
 }
 
 
@@ -255,10 +263,28 @@ module "ecs_task_marketing" {
   ]
 }
 
+module "ecs_task_permitio" {
+  source              = "../../modules/ecs-task"
+  family              = "develop-gp2-permitio-task"
+  container_name      = "develop-gp2-marketing-container"
+  ecr_repository_url  = module.ecr.repository_urls["permitio"]
+  execution_role_arn  = module.iam.ecs_task_role_arn
+  task_role_arn       = module.iam.ecs_task_role_arn
+  cpu                 = 512
+  memory              = 1024
+  container_port      = 3000
+  aws_region          = "us-east-1"
+  network_mode        = "bridge"
+
+  environment_variables = [
+    { name = "ENV", value = "development" },
+    { name = "SERVICE", value = "marketing" }
+  ]
+}
 
 module "ecs_service_configs" {
   source                 = "../../modules/ecs-service"
-  environment            = "develop-gp2"
+  environment            = "develop-gp2-configs"
   cluster_id             = module.ecs.ecs_cluster_id
   task_definition_arn    = module.ecs_task_configs.ecs_task_definition_arn
   private_subnet_ids     = module.vpc.private_subnet_ids
@@ -267,11 +293,18 @@ module "ecs_service_configs" {
   container_name         = "develop-gp2-configs-container"
   container_port         = 5004
   service_connect_namespace = module.cloud_map.namespace_id  
+  health_check_path      = "/configs/health"
+  # Auto Scaling Configuration
+  min_task_count       = 1
+  max_task_count       = 5
+  target_cpu_utilization = 50
+  scale_in_cooldown    = 120
+  scale_out_cooldown   = 300
 }
 
 module "ecs_service_documents" {
   source                 = "../../modules/ecs-service"
-  environment            = "develop-gp2"
+  environment            = "develop-gp2-documents"
   cluster_id             = module.ecs.ecs_cluster_id
   task_definition_arn    = module.ecs_task_documents.ecs_task_definition_arn
   desired_count          = 2
@@ -281,25 +314,40 @@ module "ecs_service_documents" {
   container_name         = "develop-gp2-documents-container"
   container_port         = 5008
   service_connect_namespace = module.cloud_map.namespace_id  
+  health_check_path      = "/documents/health"
+  
+  # Auto Scaling Configuration
+  min_task_count       = 1
+  max_task_count       = 5
+  target_cpu_utilization = 50
+  scale_in_cooldown    = 120
+  scale_out_cooldown   = 300
 }
 
 module "ecs_service_gateway" {
   source                 = "../../modules/ecs-service"
-  environment            = "develop-gp2"
+  environment            = "develop-gp2-gateway"
   cluster_id             = module.ecs.ecs_cluster_id
   task_definition_arn    = module.ecs_task_gateway.ecs_task_definition_arn
   desired_count          = 2
   private_subnet_ids     = module.vpc.private_subnet_ids
   security_group_id      = module.security_group.security_group_id
-  target_group_arn       = module.alb.target_group_arn
+  target_group_arn       = module.alb.gateway_target_group_arn
   container_name         = "develop-gp2-gateway-container"
   container_port         = 5000
   service_connect_namespace = module.cloud_map.namespace_id  
+  health_check_path      = "/gateway/health"
+  # Auto Scaling Configuration
+  min_task_count       = 1
+  max_task_count       = 5
+  target_cpu_utilization = 50
+  scale_in_cooldown    = 120
+  scale_out_cooldown   = 300
 }
 
 module "ecs_service_identity" {
   source                 = "../../modules/ecs-service"
-  environment            = "develop-gp2"
+  environment            = "develop-gp2-identity"
   cluster_id             = module.ecs.ecs_cluster_id
   task_definition_arn    = module.ecs_task_identity.ecs_task_definition_arn
   desired_count          = 2
@@ -309,11 +357,18 @@ module "ecs_service_identity" {
   container_name         = "develop-gp2-identity-container"
   container_port         =  5002
   service_connect_namespace = module.cloud_map.namespace_id  
+  health_check_path      = "/identity/health"
+  # Auto Scaling Configuration
+  min_task_count       = 1
+  max_task_count       = 5
+  target_cpu_utilization = 50
+  scale_in_cooldown    = 120
+  scale_out_cooldown   = 300
 }
 
 module "ecs_service_payment" {
   source                 = "../../modules/ecs-service"
-  environment            = "develop-gp2"
+  environment            = "develop-gp2-payment"
   cluster_id             = module.ecs.ecs_cluster_id
   task_definition_arn    = module.ecs_task_payment.ecs_task_definition_arn
   desired_count          = 2
@@ -323,11 +378,18 @@ module "ecs_service_payment" {
   container_name         = "develop-gp2-payment-container"
   container_port         = 5003
   service_connect_namespace = module.cloud_map.namespace_id  
+  health_check_path      = "/payment/health"
+  # Auto Scaling Configuration
+  min_task_count       = 1
+  max_task_count       = 5
+  target_cpu_utilization = 50
+  scale_in_cooldown    = 120
+  scale_out_cooldown   = 300
 }
 
 module "ecs_service_workspace" {
   source                 = "../../modules/ecs-service"
-  environment            = "develop-gp2"
+  environment            = "develop-gp2-workspace"
   cluster_id             = module.ecs.ecs_cluster_id
   task_definition_arn    = module.ecs_task_workspace.ecs_task_definition_arn
   desired_count          = 2
@@ -337,39 +399,60 @@ module "ecs_service_workspace" {
   container_name         = "develop-gp2-workspace-container"
   container_port         = 5006
   service_connect_namespace = module.cloud_map.namespace_id  
+  health_check_path      = "/workspace/health"
+  # Auto Scaling Configuration
+  min_task_count       = 1
+  max_task_count       = 5
+  target_cpu_utilization = 50
+  scale_in_cooldown    = 120
+  scale_out_cooldown   = 300
 }
 
 module "ecs_service_tenant" {
   source                 = "../../modules/ecs-service"
-  environment            = "develop-gp2"
+  environment            = "develop-gp2-tenant"
   cluster_id             = module.ecs.ecs_cluster_id
   task_definition_arn    = module.ecs_task_tenant.ecs_task_definition_arn
   desired_count          = 2
   private_subnet_ids     = module.vpc.private_subnet_ids
   security_group_id      = module.security_group.security_group_id
-  target_group_arn       = module.alb.target_group_arn
+  target_group_arn       = module.alb.frontend_tenant_target_group_arn
   container_name         = "develop-gp2-tenant-container"
   container_port         = 3001
   service_connect_namespace = module.cloud_map.namespace_id  
+  health_check_path      = "/tenant/health"
+  # Auto Scaling Configuration
+  min_task_count       = 1
+  max_task_count       = 5
+  target_cpu_utilization = 50
+  scale_in_cooldown    = 120
+  scale_out_cooldown   = 300
 }
 
 module "ecs_service_webhook" {
   source                 = "../../modules/ecs-service"
-  environment            = "develop-gp2"
+  environment            = "develop-gp2-webhook"
   cluster_id             = module.ecs.ecs_cluster_id
   task_definition_arn    = module.ecs_task_webhook.ecs_task_definition_arn
   desired_count          = 2
   private_subnet_ids     = module.vpc.private_subnet_ids
   security_group_id      = module.security_group.security_group_id
-  target_group_arn       = module.alb.target_group_arn
+  target_group_arn       = module.alb.webhook_target_group_arn  
   container_name         = "develop-gp2-webhook-container"
   container_port         = 5007
   service_connect_namespace = module.cloud_map.namespace_id  
+  health_check_path      = "/webhook/health"
+  # Auto Scaling Configuration
+  min_task_count       = 1
+  max_task_count       = 5
+  target_cpu_utilization = 50
+  scale_in_cooldown    = 120
+  scale_out_cooldown   = 300
 }
 
 module "ecs_service_marketing" {
   source                 = "../../modules/ecs-service"
-  environment            = "develop-gp2"
+  environment            = "develop-gp2-marketing"
   cluster_id             = module.ecs.ecs_cluster_id
   task_definition_arn    = module.ecs_task_marketing.ecs_task_definition_arn
   desired_count          = 2
@@ -379,5 +462,33 @@ module "ecs_service_marketing" {
   container_name         = "develop-gp2-marketing-container"
   container_port         = 3000 
   service_connect_namespace = module.cloud_map.namespace_id  
+  health_check_path      = "/marketing/health"
+  # Auto Scaling Configuration
+  min_task_count       = 1
+  max_task_count       = 5
+  target_cpu_utilization = 50
+  scale_in_cooldown    = 120
+  scale_out_cooldown   = 300
+
 }
 
+module "ecs_service_permitio" {
+  source                 = "../../modules/ecs-service"
+  environment            = "develop-gp2-permitio"
+  cluster_id             = module.ecs.ecs_cluster_id
+  task_definition_arn    = module.ecs_task_marketing.ecs_task_definition_arn
+  desired_count          = 2
+  private_subnet_ids     = module.vpc.private_subnet_ids
+  security_group_id      = module.security_group.security_group_id
+  target_group_arn       = module.alb.permitio_target_group_arn
+  container_name         = "develop-gp2-marketing-container"
+  container_port         = 3000 
+  service_connect_namespace = module.cloud_map.namespace_id  
+  health_check_path      = "/permitio/health"
+  # Auto Scaling Configuration
+  min_task_count       = 1
+  max_task_count       = 5
+  target_cpu_utilization = 50
+  scale_in_cooldown    = 120
+  scale_out_cooldown   = 300
+}
