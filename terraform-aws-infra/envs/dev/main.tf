@@ -27,6 +27,17 @@ module "security_group" {
 }
 
 
+# # ✅ SonarQube EC2 Instance
+module "sonarqube_instance" {
+  source            = "../../modules/ec2"
+  ami_id            = "ami-0c94855ba95c71c99" # Amazon Linux 2 AMI
+  instance_type     = "t2.medium"
+  key_name          = "ec2-sonar-instance"
+  security_group_id = module.security_group.security_group_id
+}
+
+
+
 module "api_gateway" {
   source              = "../../modules/api-gateway"
   environment         = "develop-gp2"
@@ -79,6 +90,7 @@ module "alb" {
   environment       = "develop-gp2"
   vpc_id            = module.vpc.vpc_id
   private_subnet_ids = module.vpc.private_subnet_ids
+  public_subnet_ids = module.vpc.public_subnet_ids
   security_group_id = module.security_group.security_group_id
   container_port    = 80
   health_check_path  = "/health"

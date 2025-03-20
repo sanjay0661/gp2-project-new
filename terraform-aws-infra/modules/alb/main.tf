@@ -1,9 +1,9 @@
 resource "aws_lb" "ecs_alb" {
   name               = "${var.environment}-ecs-alb"
-  internal           = true  # Internal ALB for private subnets
+  internal           = false  # Internal ALB for private subnets
   load_balancer_type = "application"
   security_groups    = [var.security_group_id]
-  subnets            = var.private_subnet_ids  # Use private subnets
+  subnets            = var.public_subnet_ids  # Use private subnets
 
   enable_deletion_protection = false
 }
