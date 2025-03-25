@@ -5,7 +5,7 @@ resource "aws_ecs_cluster" "ecs_cluster" {
 
 resource "aws_launch_template" "ecs_launch_template" {
   name_prefix   = "ecs-template-"
-  image_id      = var.ami_id  # Ensure this is an ECS-optimized AMI
+  image_id      = var.ami_id  # Ensure this is an ECS-optimized AMI add
   instance_type = var.instance_type
   key_name      = var.key_name
 
