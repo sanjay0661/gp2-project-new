@@ -61,15 +61,16 @@ module "keypair" {
 module "ecs" {
   source               = "../../modules/ecs"
   cluster_name         = "develop-gp2-ecs-cluster"
-  ami_id               = "ami-0c55b159cbfafe1f0"  # Update with a valid ECS-optimized AMI
+ # ami_id               = "ami-0c55b159cbfafe1f0"  # Update with a valid ECS-optimized AMI
   instance_type        = "t3.medium"
   key_name             = module.keypair.key_name
   ebs_volume_size      = 50
   iam_instance_profile = module.iam.ecs_instance_profile
-  asg_min_size         = 0
+  asg_min_size         = 1
   asg_max_size         = 5
   asg_desired_capacity = 1
   private_subnet_ids   = module.vpc.private_subnet_ids
+  target_group_arns   = [module.alb.frontend_tenant_target_group_arn]
   security_group_id    = module.security_group.security_group_id
   vpc_id               = module.vpc.vpc_id
  
@@ -430,8 +431,11 @@ module "ecs_service_tenant" {
   security_group_id      = module.security_group.security_group_id
   target_group_arn       = module.alb.frontend_tenant_target_group_arn
   container_name         = "develop-gp2-tenant-container"
-  container_port         = 3001
-  service_connect_namespace = module.cloud_map.namespace_id  
+  container_port         = 3001 
+  network_mode              = "bridge"
+  enable_service_connect    = false
+  service_connect_namespace = null
+
   health_check_path      = "/tenant/health"
   # Auto Scaling Configuration
   min_task_count       = 1
@@ -504,3 +508,4 @@ module "ecs_service_permitio" {
   scale_in_cooldown    = 120
   scale_out_cooldown   = 300
 }
+

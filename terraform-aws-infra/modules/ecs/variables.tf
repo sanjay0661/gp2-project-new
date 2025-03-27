@@ -9,10 +9,10 @@ variable "cluster_name" {
   type        = string
 }
 
-variable "ami_id" {
-  description = "The AMI ID for the ECS instances"
-  type        = string
-}
+# variable "ami_id" {
+#   description = "The AMI ID for the ECS instances"
+#   type        = string
+# }
 
 variable "instance_type" {
   description = "The instance type for ECS instances"
@@ -63,3 +63,10 @@ variable "private_subnet_ids" {
   description = "List of private subnet IDs"
   type        = list(string)
 }
+
+variable "target_group_arns" {
+  description = "List of Target Group ARNs for ECS instances"
+  type        = list(string)
+  default     = []
+}
+

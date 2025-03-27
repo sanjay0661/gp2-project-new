@@ -126,7 +126,7 @@ resource "aws_lb_target_group" "gateway" {
   port        = 5000
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  target_type = "instance"
 
   health_check {
     path = "/gateway/health"
@@ -138,10 +138,14 @@ resource "aws_lb_target_group" "tenant" {
   port        = 3001
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  target_type = "instance"
 
   health_check {
     path = "/tenant/health"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
   }
 }
 
@@ -150,7 +154,7 @@ resource "aws_lb_target_group" "webhook" {
   port        = 5007
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  target_type = "instance"
 
   health_check {
     path = "/webhook/health"
@@ -162,7 +166,7 @@ resource "aws_lb_target_group" "permitio" {
   port        = 5005  # ✅ Adjust based on the actual port
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  target_type = "instance"
 
   health_check {
     path = "/permitio/health"
@@ -175,7 +179,7 @@ resource "aws_lb_target_group" "marketing" {
   port        = 3000
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"
+  target_type = "instance"
 
   health_check {
     path                = "/marketing/health"
