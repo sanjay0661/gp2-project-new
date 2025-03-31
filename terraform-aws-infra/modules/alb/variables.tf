@@ -58,3 +58,8 @@ variable "frontend_tenant_target_group_arn" {
   description = "ARN of the Frontend Tenant Target Group"
   type        = string
 }
+
+variable "ecs_asg_name" {
+  description = "ECS Auto Scaling Group Name"
+  type        = string
+}

@@ -70,8 +70,8 @@ module "ecs" {
   asg_max_size         = 5
   asg_desired_capacity = 1
   private_subnet_ids   = module.vpc.private_subnet_ids
-  target_group_arns   = [module.alb.frontend_tenant_target_group_arn]
   security_group_id    = module.security_group.security_group_id
+  target_group_arns   = [module.alb.frontend_tenant_target_group_arn]
   vpc_id               = module.vpc.vpc_id
  
 }
@@ -95,7 +95,7 @@ module "alb" {
   security_group_id = module.security_group.security_group_id
   container_port    = 80
   health_check_path  = "/health"
-
+  ecs_asg_name = module.ecs.ecs_asg_name
   gateway_target_group_arn         = module.alb.gateway_target_group_arn
   marketing_target_group_arn       = module.alb.marketing_target_group_arn
   webhook_target_group_arn         = module.alb.webhook_target_group_arn
@@ -117,9 +117,10 @@ module "ecs_task_configs" {
   container_name      = "develop-gp2-configs-container"
   ecr_repository_url  = module.ecr.repository_urls["configs"]
   execution_role_arn  = module.iam.ecs_task_role_arn
-  task_role_arn       = module.iam.ecs_task_role_arn
+  task_role_arn       = module.iam.ecs_instance_role_arn
   cpu                 = 512
   memory              = 1024
+  memory_reservation  = 512
   container_port      = 5004
   aws_region          = "us-east-1"
   network_mode        = "awsvpc"
@@ -127,6 +128,9 @@ module "ecs_task_configs" {
     { name = "ENV", value = "development" },
     { name = "SERVICE", value = "configs" }
   ]
+  log_group_name      = "/ecs/gp2-develop-configs-task"
+  log_stream_prefix   = "gp2-configs"
+  create_log_group   = true
 }
 
 module "ecs_task_documents" {
@@ -135,9 +139,10 @@ module "ecs_task_documents" {
   container_name      = "develop-gp2-documents-container"
   ecr_repository_url  = module.ecr.repository_urls["documents"]
   execution_role_arn  = module.iam.ecs_task_role_arn
-  task_role_arn       = module.iam.ecs_task_role_arn
+  task_role_arn       = module.iam.task_role_arn
   cpu                 = 512
   memory              = 1024
+  memory_reservation  = 512
   container_port      = 5008
   aws_region          = "us-east-1"
   network_mode        = "awsvpc"
@@ -145,6 +150,9 @@ module "ecs_task_documents" {
     { name = "ENV", value = "development" },
     { name = "SERVICE", value = "documents" }
   ]
+   log_group_name      = "/ecs/gp2-develop-documents-task"
+  log_stream_prefix   = "gp2-documents"
+  create_log_group   = true
 }
 
 module "ecs_task_gateway" {
@@ -153,9 +161,10 @@ module "ecs_task_gateway" {
   container_name      = "develop-gp2-gateway-container"
   ecr_repository_url  = module.ecr.repository_urls["gateway"]
   execution_role_arn  = module.iam.ecs_task_role_arn
-  task_role_arn       = module.iam.ecs_task_role_arn
+  task_role_arn       = module.iam.ecs_instance_role_arn
   cpu                 = 512
   memory              = 1024
+  memory_reservation  = 512
   container_port      = 5000
   aws_region          = "us-east-1"
   network_mode        = "awsvpc"
@@ -163,6 +172,9 @@ module "ecs_task_gateway" {
     { name = "ENV", value = "development" },
     { name = "SERVICE", value = "gateway" }
   ]
+   log_group_name      = "/ecs/gp2-develop-webhook-task"
+  log_stream_prefix   = "gp2-gateway"
+  create_log_group   = true
 }
 
 module "ecs_task_identity" {
@@ -171,9 +183,10 @@ module "ecs_task_identity" {
   container_name      = "develop-gp2-identity-container"
   ecr_repository_url  = module.ecr.repository_urls["identity"]
   execution_role_arn  = module.iam.ecs_task_role_arn
-  task_role_arn       = module.iam.ecs_task_role_arn
+  task_role_arn       = module.iam.ecs_instance_role_arn
   cpu                 = 512
   memory              = 1024
+  memory_reservation  = 512
   container_port      = 5002
   aws_region          = "us-east-1"
   network_mode        = "awsvpc"
@@ -181,6 +194,9 @@ module "ecs_task_identity" {
     { name = "ENV", value = "development" },
     { name = "SERVICE", value = "identity" }
   ]
+  log_group_name      = "/ecs/gp2-develop-identity-task"
+  log_stream_prefix   = "gp2-identity"
+  create_log_group   = true
 }
 
 module "ecs_task_payment" {
@@ -189,9 +205,10 @@ module "ecs_task_payment" {
   container_name      = "develop-gp2-payment-container"
   ecr_repository_url  = module.ecr.repository_urls["payment"]
   execution_role_arn  = module.iam.ecs_task_role_arn
-  task_role_arn       = module.iam.ecs_task_role_arn
+  task_role_arn       = module.iam.ecs_instance_role_arn
   cpu                 = 512
   memory              = 1024
+  memory_reservation  = 512
   container_port      = 5003
   aws_region          = "us-east-1"
   network_mode        = "awsvpc"
@@ -199,6 +216,9 @@ module "ecs_task_payment" {
     { name = "ENV", value = "development" },
     { name = "SERVICE", value = "payment" }
   ]
+  log_group_name      = "/ecs/gp2-develop-payment-task"
+  log_stream_prefix   = "gp2-payment"
+  create_log_group   = true
 }
 
 module "ecs_task_workspace" {
@@ -207,9 +227,10 @@ module "ecs_task_workspace" {
   container_name      = "develop-gp2-workspace-container"
   ecr_repository_url  = module.ecr.repository_urls["workspace"]
   execution_role_arn  = module.iam.ecs_task_role_arn
-  task_role_arn       = module.iam.ecs_task_role_arn
+  task_role_arn       = module.iam.ecs_instance_role_arn
   cpu                 = 512
   memory              = 1024
+  memory_reservation  = 512
   container_port      = 5006
   aws_region          = "us-east-1"
   network_mode        = "awsvpc"
@@ -217,6 +238,9 @@ module "ecs_task_workspace" {
     { name = "ENV", value = "development" },
     { name = "SERVICE", value = "workspace" }
   ]
+   log_group_name      = "/ecs/gp2-develop-workspace-task"
+  log_stream_prefix   = "gp2-workspace"
+  create_log_group   = true
 }
 
 module "ecs_task_tenant" {
@@ -225,9 +249,10 @@ module "ecs_task_tenant" {
   container_name      = "develop-gp2-tenant-container"
   ecr_repository_url  = module.ecr.repository_urls["tenant"]
   execution_role_arn  = module.iam.ecs_task_role_arn
-  task_role_arn       = module.iam.ecs_task_role_arn
+  task_role_arn       = module.iam.task_role_arn
   cpu                 = 512
   memory              = 1024
+  memory_reservation  = 512
   container_port      = 3001
   aws_region          = "us-east-1"
   network_mode        = "bridge"
@@ -236,6 +261,9 @@ module "ecs_task_tenant" {
     { name = "ENV", value = "development" },
     { name = "SERVICE", value = "tenant" }
   ]
+    log_group_name      = "/ecs/gp2-develop-tenant-task"
+  log_stream_prefix   = "gp2-tenant"
+  create_log_group   = true
 }
 
 module "ecs_task_webhook" {
@@ -244,9 +272,10 @@ module "ecs_task_webhook" {
   container_name      = "develop-gp2-webhook-container"
   ecr_repository_url  = module.ecr.repository_urls["webhook"]
   execution_role_arn  = module.iam.ecs_task_role_arn
-  task_role_arn       = module.iam.ecs_task_role_arn
+  task_role_arn       = module.iam.ecs_instance_role_arn
   cpu                 = 512
   memory              = 1024
+  memory_reservation  = 512
   container_port      = 5007
   aws_region          = "us-east-1"
   network_mode        = "bridge"
@@ -255,6 +284,9 @@ module "ecs_task_webhook" {
     { name = "ENV", value = "development" },
     { name = "SERVICE", value = "webhook" }
   ]
+    log_group_name      = "/ecs/gp2-develop-webhook-task"
+  log_stream_prefix   = "gp2-webhook"
+  create_log_group   = true
 }
 
 module "ecs_task_marketing" {
@@ -263,9 +295,10 @@ module "ecs_task_marketing" {
   container_name      = "develop-gp2-marketing-container"
   ecr_repository_url  = module.ecr.repository_urls["marketing"]
   execution_role_arn  = module.iam.ecs_task_role_arn
-  task_role_arn       = module.iam.ecs_task_role_arn
+  task_role_arn       = module.iam.ecs_instance_role_arn
   cpu                 = 512
   memory              = 1024
+  memory_reservation  = 512
   container_port      = 3000
   aws_region          = "us-east-1"
   network_mode        = "bridge"
@@ -274,6 +307,9 @@ module "ecs_task_marketing" {
     { name = "ENV", value = "development" },
     { name = "SERVICE", value = "marketing" }
   ]
+   log_group_name      = "/ecs/gp2-develop-marketing-task"
+  log_stream_prefix   = "gp2-marketing"
+  create_log_group   = true
 }
 
 module "ecs_task_permitio" {
@@ -282,9 +318,10 @@ module "ecs_task_permitio" {
   container_name      = "develop-gp2-marketing-container"
   ecr_repository_url  = module.ecr.repository_urls["permitio"]
   execution_role_arn  = module.iam.ecs_task_role_arn
-  task_role_arn       = module.iam.ecs_task_role_arn
+  task_role_arn       = module.iam.ecs_instance_role_arn
   cpu                 = 512
   memory              = 1024
+  memory_reservation  = 512
   container_port      = 3000
   aws_region          = "us-east-1"
   network_mode        = "bridge"
@@ -293,6 +330,9 @@ module "ecs_task_permitio" {
     { name = "ENV", value = "development" },
     { name = "SERVICE", value = "marketing" }
   ]
+  log_group_name      = "/ecs/gp2-develop-permitio-task"
+  log_stream_prefix   = "gp2-permitio"
+  create_log_group   = true
 }
 
 module "ecs_service_configs" {

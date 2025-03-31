@@ -23,6 +23,7 @@ resource "aws_lb_target_group" "ecs_tg" {
   }
 }
 
+
 resource "aws_lb_listener" "ecs_listener" {
   load_balancer_arn = aws_lb.ecs_alb.arn
   port              = 80
@@ -135,14 +136,15 @@ resource "aws_lb_target_group" "gateway" {
 
 resource "aws_lb_target_group" "tenant" {
   name        = "ecs-gp2-dev-frontend-tenant"
-  port        = 3001
+  port        = 80
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "instance"
 
   health_check {
-    path = "/tenant/health"
+    path = "/"
     interval            = 30
+    port                = "3001" 
     timeout             = 5
     healthy_threshold   = 3
     unhealthy_threshold = 3
@@ -193,4 +195,9 @@ resource "aws_lb_target_group" "marketing" {
     type    = "lb_cookie"
     enabled = false  # Ensure stickiness is OFF
   }
+}
+
+resource "aws_autoscaling_attachment" "ecs_asg_attachment" {
+  autoscaling_group_name = var.ecs_asg_name
+  lb_target_group_arn    = aws_lb_target_group.tenant.arn
 }

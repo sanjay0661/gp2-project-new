@@ -22,6 +22,11 @@ variable "memory" {
 
 }
 
+variable "memory_reservation" {
+  description = "The soft limit (in MiB) for the container"
+  type        = number
+}
+
 variable "execution_role_arn" {
   description = "The ARN of the ECS execution role"
   type        = string
@@ -61,4 +66,21 @@ variable "environment_variables" {
     value = string
   }))
   default = []
+}
+ 
+variable "log_group_name" {
+  type        = string
+  description = "CloudWatch log group name for ECS task"
+}
+ 
+variable "log_stream_prefix" {
+  type        = string
+  description = "CloudWatch log stream prefix"
+}
+ 
+ 
+variable "create_log_group" {
+  description = "Whether to create CloudWatch log group"
+  type        = bool
+  default     = false
 }
