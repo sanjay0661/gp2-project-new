@@ -1,12 +1,14 @@
 name: Update Secret on Every Run
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   update-secret:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
     steps:
       - name: Generate new secret value
         id: generate
@@ -15,6 +17,8 @@ jobs:
 
       - name: Update GitHub Secret
         run: |
-          gh secret set MY_SECRET --body "$SECRET_VALUE"
+          gh secret set MY_SECRET \
+            --body "$SECRET_VALUE" \
+            --repo "$GITHUB_REPOSITORY"
         env:
           GH_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
