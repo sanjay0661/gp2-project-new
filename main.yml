@@ -1,0 +1,109 @@
+name: KC-MOBILE-APP-DEPLOYMENTS-BUILD-PUSH
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Which environment to deploy to?'
+        required: true
+        type: choice
+        options:
+          - dev
+          - uat
+          - main
+          - enhance_location
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PASS_GITHUB_TOKEN }}
+
+      - name: Create .env file from secrets
+        run: |
+          echo "API_URL=${{ secrets.API_URL }}" >> .env
+          echo "GOOGLE_MAP_API_KEY=${{ secrets.GOOGLE_MAP_API_KEY }}" >> .env
+
+      - name: Setup Environment
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Ruby and Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+
+      - name: Install Fastlane
+        run: gem install fastlane
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Auto bump versionCode, versionName and update Fastfile track
+        id: bump_version
+        run: |
+          FILE="android/app/build.gradle"
+          FASTFILE="android/fastlane/Fastfile"
+
+          # Decide track based on environment input or branch
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          if [[ -z "$ENVIRONMENT" ]]; then
+            ENVIRONMENT="${GITHUB_REF_NAME}"
+          fi
+
+          if [[ "$ENVIRONMENT" == "dev" ]]; then
+            sed -i 's/track: *".*"/track: "internal"/' "$FASTFILE"
+            echo "✅ Set track to internal for dev"
+          elif [[ "$ENVIRONMENT" == "main" ]]; then
+            sed -i 's/track: *".*"/track: "prod"/' "$FASTFILE"
+            echo "✅ Set track to prod for main"
+          else
+            echo "ℹ️ No track change required for environment/branch: $ENVIRONMENT"
+          fi
+
+          # Version bump
+          versionCode=$(grep versionCode $FILE | awk '{print $2}')
+          newVersionCode=$((versionCode + 1))
+          newVersionName="1.1.$newVersionCode"
+
+          sed -i "s/versionCode $versionCode/versionCode $newVersionCode/" $FILE
+          sed -i "s/versionName \".*\"/versionName \"$newVersionName\"/" $FILE
+
+          echo "✅ Updated versionCode to $newVersionCode and versionName to $newVersionName"
+
+          echo "NEW_VERSION_CODE=$newVersionCode" >> $GITHUB_ENV
+          echo "NEW_VERSION_NAME=$newVersionName" >> $GITHUB_ENV
+     
+      - name: Commit version & track changes
+        if: github.event_name == 'push'
+        run: |
+          git config --global user.email "sanjayraj0661@gmail.com"
+          git config --global user.name "sanjayraj0661"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+          git add android/app/build.gradle android/fastlane/Fastfile
+          git commit -m "ci: bump version to $NEW_VERSION_NAME and update track" || echo "No changes to commit"
+          git push origin HEAD:${GITHUB_REF_NAME}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PASS_GITHUB_TOKEN }}
+
+      - name: Install Dependencies
+        run: |
+          npm ci
+          cd android
+          ./gradlew dependencies
+
+      - name: Build & Upload to Play Store
+        run: |
+          cd android
+          fastlane release
+ 
+    env:
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
