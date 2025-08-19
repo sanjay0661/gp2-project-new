@@ -18,6 +18,6 @@ jobs:
         run: |
           gh secret set MY_SECRET \
             --body "$SECRET_VALUE" \
-            --repo "sanjayraj/gp2-project-new"
+            --repo "sanjay0661/gp2-project-new"
         env:
           GH_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
