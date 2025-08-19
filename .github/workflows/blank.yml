@@ -23,4 +23,4 @@ jobs:
             --body "$SECRET_VALUE" \
             --repo "sanjay0661/gp2-project-new"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
