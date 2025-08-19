@@ -7,8 +7,8 @@ jobs:
   update-secret:
     runs-on: ubuntu-latest
     permissions:
-      contents: write      # needed for checkout
-      actions: write       # needed for updating secrets
+      contents: write
+      actions: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -20,6 +20,6 @@ jobs:
 
       - name: Update GitHub Secret
         run: |
-          gh secret set MY_SECRET --body "$SECRET_VALUE"
+          gh secret set MY_SECRET --body "$SECRET_VALUE" --repo $GITHUB_REPOSITORY
         env:
           GH_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
