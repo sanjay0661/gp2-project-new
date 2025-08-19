@@ -1,13 +1,18 @@
 name: Update Secret on Every Run
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   update-secret:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write      # needed for checkout
+      actions: write       # needed for updating secrets
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Generate new secret value
         id: generate
         run: |
