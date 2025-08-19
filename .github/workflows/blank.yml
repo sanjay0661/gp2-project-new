@@ -1,0 +1,20 @@
+name: Update Secret on Every Run
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  update-secret:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate new secret value
+        id: generate
+        run: |
+          echo "SECRET_VALUE=$(date +%s | sha256sum | cut -c1-32)" >> $GITHUB_ENV
+
+      - name: Update GitHub Secret
+        run: |
+          gh secret set MY_SECRET --body "$SECRET_VALUE"
+        env:
+          GH_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
