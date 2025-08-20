@@ -1,4 +1,4 @@
-name: Increment MY_SECRET on Every Run
+name: Increment Variable on Every Run
 
 on:
   push:
@@ -7,31 +7,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-secret:
+  update-variable:
     runs-on: ubuntu-latest
     permissions:
       actions: write
       contents: read
     steps:
-      - name: Get current secret value
-        id: get-secret
+      - name: Get current variable value
+        id: get-var
         run: |
-          CURRENT_VALUE=$(gh secret list --repo "sanjay0661/gp2-project-new" --visibility all | grep MY_SECRET || echo "")
+          CURRENT_VALUE=$(gh variable get MY_SECRET --repo "sanjay0661/gp2-project-new" --json value -q .value || echo "")
           if [ -z "$CURRENT_VALUE" ]; then
-            echo "MY_SECRET=1" >> $GITHUB_ENV
+            NEW_VALUE=1
           else
-            VALUE=$(gh secret list --repo "sanjay0661/gp2-project-new" --visibility all | grep MY_SECRET | awk '{print $2}')
-            NEW_VALUE=$((VALUE + 1))
-            echo "MY_SECRET=$NEW_VALUE" >> $GITHUB_ENV
+            NEW_VALUE=$((CURRENT_VALUE + 1))
           fi
+          echo "NEW_VALUE=$NEW_VALUE" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
 
-      - name: Update secret with new value
+      - name: Update variable with new value
         run: |
-          gh secret set MY_SECRET \
-            --body "${MY_SECRET}" \
+          gh variable set MY_SECRET \
+            --body "${NEW_VALUE}" \
             --repo "sanjay0661/gp2-project-new"
         env:
           GH_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
-          MY_SECRET: ${{ env.MY_SECRET }}
+          NEW_VALUE: ${{ env.NEW_VALUE }}
