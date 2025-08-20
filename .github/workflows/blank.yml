@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
   workflow_dispatch:
 
 jobs:
@@ -13,10 +14,22 @@ jobs:
       actions: write
       contents: read
     steps:
+      - name: Set target variable name based on branch
+        id: set-var-name
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            echo "VAR_NAME=MY_PROD_SECRET" >> $GITHUB_ENV
+          elif [[ "${GITHUB_REF_NAME}" == "dev" ]]; then
+            echo "VAR_NAME=MY_DEV_SECRET" >> $GITHUB_ENV
+          else
+            echo "Unsupported branch: ${GITHUB_REF_NAME}"
+            exit 1
+          fi
+
       - name: Get current variable value
         id: get-var
         run: |
-          CURRENT_VALUE=$(gh variable get MY_SECRET --repo "sanjay0661/gp2-project-new" --json value -q .value || echo "")
+          CURRENT_VALUE=$(gh variable get $VAR_NAME --repo "sanjay0661/gp2-project-new" --json value -q .value || echo "")
           if [ -z "$CURRENT_VALUE" ]; then
             NEW_VALUE=1
           else
@@ -25,12 +38,14 @@ jobs:
           echo "NEW_VALUE=$NEW_VALUE" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
+          VAR_NAME: ${{ env.VAR_NAME }}
 
       - name: Update variable with new value
         run: |
-          gh variable set MY_SECRET \
+          gh variable set $VAR_NAME \
             --body "${NEW_VALUE}" \
             --repo "sanjay0661/gp2-project-new"
         env:
           GH_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
+          VAR_NAME: ${{ env.VAR_NAME }}
           NEW_VALUE: ${{ env.NEW_VALUE }}
