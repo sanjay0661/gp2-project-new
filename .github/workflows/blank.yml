@@ -1,10 +1,10 @@
-name: Update Secret on Every Run
+name: Increment MY_SECRET on Every Run
 
 on:
   push:
     branches:
-      - main   # run automatically on push to main
-  workflow_dispatch:  # still allow manual trigger too
+      - main
+  workflow_dispatch:
 
 jobs:
   update-secret:
@@ -13,14 +13,25 @@ jobs:
       actions: write
       contents: read
     steps:
-      - name: Generate new secret value
+      - name: Get current secret value
+        id: get-secret
         run: |
-          echo "SECRET_VALUE=$(date +%s | sha256sum | cut -c1-32)" >> $GITHUB_ENV
+          CURRENT_VALUE=$(gh secret list --repo "sanjay0661/gp2-project-new" --visibility all | grep MY_SECRET || echo "")
+          if [ -z "$CURRENT_VALUE" ]; then
+            echo "MY_SECRET=1" >> $GITHUB_ENV
+          else
+            VALUE=$(gh secret list --repo "sanjay0661/gp2-project-new" --visibility all | grep MY_SECRET | awk '{print $2}')
+            NEW_VALUE=$((VALUE + 1))
+            echo "MY_SECRET=$NEW_VALUE" >> $GITHUB_ENV
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
 
-      - name: Update GitHub Secret
+      - name: Update secret with new value
         run: |
           gh secret set MY_SECRET \
-            --body "$SECRET_VALUE" \
+            --body "${MY_SECRET}" \
             --repo "sanjay0661/gp2-project-new"
         env:
           GH_TOKEN: ${{ secrets.TEST_GITHUB_TOKEN }}
+          MY_SECRET: ${{ env.MY_SECRET }}
